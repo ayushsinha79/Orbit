@@ -3,7 +3,7 @@ const express = require('express')
 const { generateSlug } = require('random-word-slugs') // for creating the random slugs for the project_id, eg: elegant-green-coat
 const { ECSClient, RunTaskCommand, CreateClusterCommand} = require('@aws-sdk/client-ecs') // AWS S3 client library
 const Redis = require('ioredis') 
-const { Server } = require('socket.io')
+// const { Server } = require('socket.io')
 
 const app = express()
 const PORT = process.env.PORT || 9000
@@ -13,7 +13,20 @@ const SECRET_KEY = process.env.IAM_SECRET_KEY
 
 const subscriber = new Redis(REDIS_URI)
 
-const io = new Server({ cors: '*' })
+
+const server = app.listen(
+    PORT,
+    console.log(`Server running on PORT ${PORT}...`)
+);
+
+// const io = new Server({ cors: '*' })
+const io = require("socket.io")(server, {
+    pingTimeout: 60000,
+    cors: {
+      origin: "http://localhost:3000",
+      // credentials: true,
+    },
+  });
 
 io.on('connection', socket => {
     socket.on('subscribe', channel => {
@@ -22,7 +35,7 @@ io.on('connection', socket => {
     })
 })
 
-io.listen(9002, () => console.log('Socket Server 9002'))
+// io.listen(9002, () => console.log('Socket Server 9002'))
 
 const ecsClient = new ECSClient({
     region: 'ap-south-1',
@@ -99,4 +112,4 @@ async function initRedisSubscribe() {
 initRedisSubscribe()
 
 
-app.listen(PORT, () => console.log(`API Server Running..${PORT}`))
+// app.listen(PORT, () => console.log(`API Server Running..${PORT}`))
